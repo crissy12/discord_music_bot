@@ -60,6 +60,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         filename = data['title'] if stream else ytdl.prepare_filename(data)
         return filename
 
+# implement queue
+
 @bot.command(name='join', help='Tells the bot to join the voice channel')
 async def join(ctx):
     if not ctx.message.author.voice:
