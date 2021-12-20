@@ -1,4 +1,5 @@
 import discord
+from discord import player
 from discord.ext import commands,tasks
 import os
 import yt_dlp
@@ -85,35 +86,31 @@ async def play(ctx,url):
         return
     else:
         voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-
+    
         if not voice_client:          
             voice_channel = ctx.author.voice.channel
             await voice_channel.connect()  
     try :
         server = ctx.message.guild
-        voice_channel = server.voice_client
+        voice_client = server.voice_client
 
         async with ctx.typing():
             filename = await YTDLSource.from_url(url, loop=bot.loop)
-            
-            if not song_queue:
-                voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=filename))
-                await ctx.send('**Now playing:** {}'.format(url)) 
-            else:
-                start_playing(voice_channel,filename)
-                await ctx.send('Song: ' + url + ' has been added to the queue')
+        song_queue.append(filename)
+        start_playing(ctx,url)
+        await ctx.send('Song: ' + url + ' has been added to the queue')
     except Exception as e:
         print(e)
-                  
-def start_playing(voice_channel,filename):
-    i = 0
-    while i < len(song_queue):  
-        try:
-            voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=song_queue[i]))
 
+def start_playing(ctx,url):
+    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    if not voice_client.is_playing():    
+        try:
+            print('\nThis is the current queue: ' + str(song_queue))
+            print('Now playing: ' + str(song_queue[0]))
+            voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=song_queue.pop(0)),after=lambda e: start_playing(ctx,url))
         except:
             pass
-        i += 1
           
 
 @bot.command(name='pause', help='This command pauses the song')
